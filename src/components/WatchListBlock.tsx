@@ -1,7 +1,3 @@
-interface watchListBlockProps {
-
-}
-
 export default function WatchListBlock() {
     return (
                 <div id="bloco da lista" className='rounded-2xl bg-[#3A3A3A] min-h-0 self-stretch'>
