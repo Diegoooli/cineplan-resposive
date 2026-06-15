@@ -1,52 +1,66 @@
+# Guia de Estilo do Mozi (STYLEGUIDE.md)
+
 ## Objetivo
+Criar **um único documento Markdown** (`STYLEGUIDE.md`, na raiz do projeto) que sirva de referência sempre que você (ou a IA) for criar uma tela nova. Ele descreve a identidade visual atual do Mozi — cores, tipografia, componentes, estrutura de tela e regras de responsividade — extraída diretamente do código já existente. **Nenhum componente ou tela é alterado**; apenas documentamos o que já existe.
 
-Trazer o código do repositório **Diegoliveirs/mozi** para dentro deste projeto Lovable e **corrigir a responsividade** das telas, sem mudar a identidade visual e sem adicionar funcionalidades novas.
+## O que será documentado (baseado no código atual)
 
-Importante: este projeto usa **TanStack Start** e o mozi usa **Vite + React Router**. Por isso a importação exige uma adaptação mecânica de roteamento (não muda nada visual). A aparência das telas (cores, textos, ícones, layout) fica idêntica.
+### 1. Fundamentos
+- **Tipografia:** Poppins (definida em `styles.css`, aplicada no `body`).
+- **Paleta** (valores reais usados hoje):
+  - Rosa principal `#E91E63` / hover `#C2185B`
+  - Fundo de tela `bg-zinc-900` (telas auth/home) e superfícies escuras `#2B2B2B`, `#3A3A3A`, `#4A4A4A`
+  - Branco e variações de transparência (`text-white`, `text-white/70`, `text-white/10`)
+  - Texto secundário `text-zinc-400` / `text-zinc-500`
+  - Avatares de exemplo: `#FAECE7`/`#712B13` e `#E6F1FB`/`#0C447C`
+- **Raio padrão:** cartão de tela `sm:rounded-[48px]`, blocos `rounded-2xl`, ícones `rounded-xl`/`rounded-[24px]`, botões `rounded-full`.
 
-## O que está quebrando hoje (diagnóstico)
+### 2. A regra de ouro da responsividade (o "container de tela")
+Documentar o padrão que toda tela segue:
+```text
+Wrapper externo:  min-h-screen + bg-zinc-900 + flex items-center justify-center
+Cartão da tela:   w-full max-w-2xl mx-auto
+                  min-h-screen sm:min-h-0      (full-screen no mobile, "cartão" no desktop)
+                  sm:rounded-[48px] overflow-hidden
+                  flex flex-col
+```
+Explicação do porquê: no mobile a tela ocupa 100% da largura/altura; a partir de `sm:` ela vira um cartão central de no máximo `max-w-2xl`, evitando o "esticamento" em telas grandes.
 
-Ao ler o código, encontrei estes problemas de responsividade/consistência:
+### 3. Componentes reutilizáveis (como usar cada um)
+Para cada componente, o doc terá: função, props e exemplo de uso copiável.
+- `Button` — botão rosa full-width (`texto`, `onClick`)
+- `Input` — campo com label, ícone, borda rosa quando preenchido (`label`, `icon`, `type`, `value`, `onChange`, `right`)
+- `Card` — cartão branco genérico
+- `SquareWhite` — quadrado branco para ícone/logo
+- `Navbar` — barra inferior fixa no mobile / relativa no desktop, alinhada ao `max-w-2xl`
+- `AppLayout` — layout de telas internas (conteúdo + Navbar, já com `max-w-2xl mx-auto` e `pb-16 sm:pb-0`)
+- `WatchListBlock` — bloco de lista com preview horizontal scrollável
 
-1. **Classe inexistente `min-h`** usada em várias telas (`min-h`, `min-h-0 min-h`) — não faz nada no Tailwind, então a altura não se comporta como esperado.
-2. **Tela de boas-vindas (`home`)**: o cartão rosa **não tem largura máxima**, então em telas grandes ele estica de ponta a ponta — diferente do login/cadastro, que usam `max-w-2xl` (cartão centralizado). Inconsistência entre dispositivos.
-3. **Tela do app (`homeApp`)**: full-bleed sem cartão centralizado nem `max-w`, e com as classes `min-h` quebradas — não fica enquadrada como as outras telas em telas grandes.
-4. **Navbar inferior**: em telas grandes fica esticada na largura toda, fora do alinhamento do cartão.
-5. **HTML inválido** na home: `<p>` aninhado dentro de `<p>`.
-6. A regra de rolagem para telas baixas (`html, body { overflow:auto }`) está só na página de login; precisa ser global.
+### 4. Padrões de seção dentro da tela
+- **Header (área rosa):** `flex-1 flex flex-col items-center justify-center px-8 py-8 gap-4`
+- **Formulário/conteúdo (área escura):** `bg-[#2B2B2B] px-6 py-8 flex flex-col gap-4`
+- **Linhas com texto + ícone:** usar `flex items-center gap-3`, com `min-w-0`/`truncate` no texto e `shrink-0` no ícone (padrão já usado no HomeApp).
 
-## Plano de execução
+### 5. Checklist de responsividade para telas novas
+Lista objetiva para validar antes de finalizar uma tela:
+- Usar o container `max-w-2xl mx-auto` + `min-h-screen sm:min-h-0`.
+- Nunca usar `min-h` inválido — só `min-h-screen` / `flex-1` / `min-h-0`.
+- Espaçamentos com escala Tailwind (`px-6`, `py-8`, `gap-4`), nada de pixels fixos arbitrários sem necessidade.
+- Texto em linhas mistas: `min-w-0` + `truncate` no texto, `shrink-0` no ícone.
+- Telas internas dentro de `AppLayout` para herdar a Navbar e o `pb-16 sm:pb-0`.
+- Testar em 390px (mobile) e 1440px (desktop).
 
-### Fase 1 — Importar o mozi (preservando identidade)
-- Instalar dependências usadas pelo app: `firebase` (e roteamento via TanStack já existente).
-- Copiar **verbatim**: `src/components/*` (Button, Input, SquareWhite, Navbar, AppLayout, WatchListBlock, Card, etc.), `src/config/firebase.js` e os assets (`hero.png`, `heart.svg`, `Film-icon.svg`, `favicon.svg`, `icons.svg`).
-- Copiar as telas (`home`, `login`, `signin`, `homeApp`) mantendo o JSX visual idêntico.
-- Carregar a fonte **Poppins** via `<link>` no `__root.tsx` e aplicar como fonte global em `styles.css` (mantém a tipografia original).
+### 6. Template pronto de tela nova
+Um bloco de código copiável (uma tela vazia já no padrão Mozi) para acelerar a criação:
+```text
+- Wrapper zinc-900 centralizado
+- Cartão max-w-2xl com header rosa + área escura
+- Pontos marcados onde inserir conteúdo
+```
 
-### Fase 2 — Roteamento nativo TanStack (adaptação mecânica, sem mudança visual)
-Criar os arquivos de rota equivalentes ao `routes.tsx` do mozi:
-- `src/routes/index.tsx` → tela de boas-vindas (`Home`)
-- `src/routes/login.tsx` → `Login`
-- `src/routes/signin.tsx` → `SignIn`
-- `src/routes/home.tsx` → `HomeApp` dentro do `AppLayout` (com a navbar)
-- `src/routes/$.tsx` → página "não encontrada" (mantendo o texto original do app)
+## Entregável
+- **1 arquivo novo:** `STYLEGUIDE.md` na raiz do projeto.
+- Sem mudanças em código de telas/componentes.
 
-Trocas mínimas de navegação (mesma API, só a sintaxe muda):
-- `useNavigate()` do react-router → `useNavigate()` do TanStack (`navigate({ to: '/login' })`)
-- `navigate(-1)` (voltar) → `router.history.back()`
-- `useLocation().pathname` na Navbar → equivalente do TanStack
-
-### Fase 3 — Correções de responsividade (o pedido principal)
-Preservando 100% as cores/identidade:
-- Substituir todas as ocorrências da classe inválida `min-h` por classes válidas (`min-h-screen` / `flex-1`).
-- **Home**: envolver o cartão rosa com `max-w-2xl mx-auto` (igual ao login/cadastro) para virar cartão centralizado em telas grandes; corrigir o `<p>` aninhado.
-- **HomeApp**: aplicar o mesmo enquadramento de cartão centralizado (`max-w-2xl`, cantos arredondados no `sm:`) e garantir que preencha a altura e role quando necessário.
-- **Navbar**: alinhar à largura do cartão e centralizar em telas grandes.
-- Mover a regra global de rolagem (`html, body, #root { height:100%; overflow:auto }`) para `styles.css` para que telas baixas/altas rolem corretamente em todas as páginas.
-
-### Fase 4 — Validação
-- Conferir o build e abrir o preview nos tamanhos **mobile, tablet e desktop** para garantir que as 4 telas se adaptam sem quebrar e mantêm a identidade.
-
-## Observações técnicas
-- O `firebaseConfig` do mozi contém chaves públicas de cliente (apiKey do Firebase web), que são seguras de ficar no código-fonte do front-end. Mantenho como está, sem expor segredos novos.
-- Nenhuma funcionalidade nova será adicionada — apenas importação fiel + ajustes de layout responsivo.
+## Detalhes técnicos
+Todas as classes citadas são extraídas verbatim de `src/styles.css`, `src/components/*` e `src/pages/*`, garantindo que o guia reflita 100% a identidade atual. O documento é puramente textual/Markdown e não afeta o build.
